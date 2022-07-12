@@ -6,8 +6,6 @@ then make a new ros topics for each tag.
 
 import cv2
 from cv2 import cvtColor
-from cv2 import circle
-from cv2 import HOUGH_GRADIENT
 from cv2 import aruco
 
 import numpy as np
@@ -163,9 +161,9 @@ class aruco_track():
 
         ID_msg = String()
 
-        ID_msg.data = ID_msg
+        ID_msg.data = self.identified_markers
 
-        self.IDs_pub.publish(ID_msg)
+        self.ID_pub.publish(ID_msg)
 
         pub_name = "robot_" + str(ID) + "_position"
         self.pub_dict[ID] = rospy.Publisher(pub_name,Pose,queue_size=1) 
