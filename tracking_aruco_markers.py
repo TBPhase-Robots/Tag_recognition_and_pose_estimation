@@ -15,6 +15,7 @@ import time
 
 import rospy2 as rospy
 from geometry_msgs.msg import Pose
+from std_msgs.msg import String
 
 class aruco_track():
 
@@ -29,7 +30,6 @@ class aruco_track():
 
         # as ArUco tags have IDs, the publisher objects are stored in a dictionary with their ID as the key
         self.pub_dict = {}
-
 
         rospy.on_shutdown(self.shutdown)
 
@@ -53,6 +53,9 @@ class aruco_track():
         # set up ArUco settings and parameters
         self.aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
         self.parameters =  aruco.DetectorParameters_create()
+
+        self.identified_markers = "" # will send a string of the markers that have been identified so that them
+        self.ID_pub = rospy.Publisher("/robot_IDs",String,queue_size=1)
 
         while True: # would normally use a while rospy not shutdown, but caused opencv to crash
             self.get_image()
@@ -139,8 +142,8 @@ class aruco_track():
 
             positions = Pose()
 
-            positions.position.x = -pos[2] # could potentially be an earlier maths error, but just this works
-            positions.position.y = pos[1]
+            positions.position.x = pos[2] # could potentially be an earlier maths error, but just this works
+            positions.position.y = -pos[1]
 
             print(pos[0])
 
@@ -155,6 +158,15 @@ class aruco_track():
         """
         As the Aruco gives an ID number, a dictionary containing all the publishing objects is created, with each robots publisher as the key
         """
+
+        self.identified_markers += str(ID) + " "
+
+        ID_msg = String()
+
+        ID_msg.data = ID_msg
+
+        self.IDs_pub.publish(ID_msg)
+
         pub_name = "robot_" + str(ID) + "_position"
         self.pub_dict[ID] = rospy.Publisher(pub_name,Pose,queue_size=1) 
 
