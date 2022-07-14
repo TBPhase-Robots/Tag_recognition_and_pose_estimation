@@ -20,17 +20,21 @@ def marker_to_int(marker_num):
 
     return output
 
+def main():
+    fig = plt.figure()
+    nx = 1
+    ny = 1
+    for i in range(67, nx*ny+67):
+        ax = fig.add_subplot(ny,nx, 1)
+        img = aruco.drawMarker(aruco_dict,i, 700)
+        plt.imshow(img, cmap = mpl.cm.gray, interpolation = "nearest")
+        ax.axis("off")
 
-fig = plt.figure()
-nx = 1
-ny = 1
-for i in range(1, nx*ny+1):
-    ax = fig.add_subplot(ny,nx, i)
-    img = aruco.drawMarker(aruco_dict,i, 700)
-    plt.imshow(img, cmap = mpl.cm.gray, interpolation = "nearest")
-    ax.axis("off")
+    print(marker_to_int(3))
 
-print(marker_to_int(3))
+    plt.savefig("one_marker.pdf")
+    plt.show()
 
-plt.savefig("one_marker.pdf")
-plt.show()
+
+if __name__ == "__main__":
+    main()
