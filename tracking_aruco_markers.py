@@ -11,16 +11,22 @@ from cv2 import aruco
 import numpy as np
 import time
 
-import rospy2 as rospy
+# import rospy2 as rospy
+
+import rclpy
+from rclpy.node import Node
+from rclpy.publisher import Publisher
+from rclpy.subscription import Subscription
 from geometry_msgs.msg import Pose
+from std_msgs.msg import Int32
 from std_msgs.msg import String
 
-class aruco_track():
+class ArucoTrack(Node):
 
     def __init__(self):
 
         # initiate ros parts
-        rospy.init_node("camera_tracker")
+        super().__init__(node_name="camera_tracker")
 
         # make a topic for every robot (?) or potentially one topic for all robots
         # normally would use a geometry pose message, however these robots move in a 2D plane simplified turtlesim message...
@@ -29,7 +35,7 @@ class aruco_track():
         # as ArUco tags have IDs, the publisher objects are stored in a dictionary with their ID as the key
         self.pub_dict = {}
 
-        rospy.on_shutdown(self.shutdown)
+        # rclpy.Context.on_shutdown(super().context, self.shutdown_callback)
 
         # imput camera values
         # used later to convert the position in the image to the functions
@@ -50,12 +56,16 @@ class aruco_track():
 
         # set up ArUco settings and parameters
         self.aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
-        self.parameters =  aruco.DetectorParameters_create()
+        self.parameters = aruco.DetectorParameters_create()
 
-        self.identified_markers = "" # will send a string of the markers that have been identified so that them
-        self.ID_pub = rospy.Publisher("/robot_IDs",String,queue_size=1)
+        self.active_robots = [] # will send a string of the markers that have been identified so that them
+        # self.ID_pub = rospy.Publisher("/robot_IDs",String,queue_size=1)
+        self.added_robot_subscriber = self.create_subscription(Int32, "/global/robots/added", self.added_robot_callback, 10)
+        self.removed_robot_subscriber = self.create_subscription(Int32, "/global/robots/removed", self.removed_robot_callback, 10)
 
         while True: # would normally use a while rospy not shutdown, but caused opencv to crash
+            rclpy.spin_once(self, timeout_sec=0)
+
             self.get_image()
             self.detect_markers()
             self.calc_positions()
@@ -67,6 +77,7 @@ class aruco_track():
 
         cv2.destroyAllWindows()
 
+    # def added_robot_callback(self,)
 
     def get_image(self): # retrieves the image from the webcam
 
@@ -105,7 +116,13 @@ class aruco_track():
 
         cv2.imshow("markers",frame_markers)
 
-            
+    def added_robot_callback(self, msg: Int32):
+        print(f'new robot: {msg.data}')
+        self.active_robots.append(msg.data)
+        self.create_robot(msg.data)
+
+    def removed_robot_callback(self, msg: Int32):
+        self.active_robots.remove(msg.data)
 
     def calc_positions(self):
 
@@ -149,26 +166,26 @@ class aruco_track():
                 self.pub_dict[pos[0]].publish(positions)
 
             except KeyError : # if the key doesn't exist than a new publisher with that key is created.
-                self.create_publisher(pos[0])
-                self.pub_dict[pos[0]].publish(positions)
+                print(f'No publisher for robot{pos[0]}')
             
-    def create_publisher(self,ID):
+    def create_robot(self,ID):
         """
         As the Aruco gives an ID number, a dictionary containing all the publishing objects is created, with each robots publisher as the key
         """
 
-        self.identified_markers += str(ID) + " "
+        # self.identified_markers += str(ID) + " "
 
-        ID_msg = String()
+        # ID_msg = String()
 
-        ID_msg.data = self.identified_markers
+        # ID_msg.data = self.identified_markers
 
-        self.ID_pub.publish(ID_msg)
+        # self.ID_pub.publish(ID_msg)
 
-        pub_name = "robot_" + str(ID) + "_position"
-        self.pub_dict[ID] = rospy.Publisher(pub_name,Pose,queue_size=1) 
+        pub_name = f"/robot{ID}/pose"
+        self.pub_dict[ID] = self.create_publisher(Pose, pub_name, 10)
+        # self.pub_dict[ID] = rospy.Publisher(pub_name,Pose,queue_size=1) 
 
-    def shutdown(self):
+    def shutdown_callback(self):
 
         print("shutdown")
 
@@ -177,10 +194,14 @@ class aruco_track():
         cv2.destroyAllWindows()
 
 def main():
-    aruco_tacker = aruco_track()
+    rclpy.init()
 
+    aruco_tacker = ArucoTrack()
+    
+    rclpy.spin(aruco_tacker)
+    rclpy.shutdown()
 
 if __name__ == "__main__":
-    img = cv2.imread("ros_turtle.jpg")
-    cv2.imshow("image",img)
+    # img = cv2.imread("ros_turtle.jpg")
+    # cv2.imshow("image",img)
     main()

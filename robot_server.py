@@ -1,5 +1,4 @@
 
-from os import kill
 import time
 from typing import List
 from std_msgs.msg import Bool
@@ -24,13 +23,17 @@ class Robot():
         self.time_since_heartbeat = 0
 
 class Server(Node):
-    next_id = 0
-    active_robot_ids = []
+    next_id: int = 0
+    active_robot_ids: List[int] = []
     active_robots: List[Robot] = []
 
     death_time: float = 20
 
     ids_publisher: Publisher = None
+    added_robot_publisher: Publisher = None
+    removed_robot_publisher: Publisher = None
+
+    register_subscription: Subscription = None
 
     def __init__(self):
         super().__init__("server")
@@ -78,6 +81,7 @@ class Server(Node):
 
                 id_msg = Int32()
                 id_msg.data = robot.id
+                print(f'Publishing new robot')
                 self.added_robot_publisher.publish(id_msg)
 
     def check_alive(self, time_delta):
