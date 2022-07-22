@@ -34,6 +34,8 @@ def main():
 
     print(marker_to_int(3))
 
+    
+
     plt.savefig("one_marker.pdf")
     plt.show()
 
