@@ -46,13 +46,11 @@ class ArucoTrack(Node):
                 print("Invalid calibration file.")
                 exit()
 
-        # make a topic for every robot (?) or potentially one topic for all robots
-        # normally would use a geometry pose message, however these robots move in a 2D plane simplified turtlesim message...
-        # ... the need for quarternion to euler transform.
-
         # as ArUco tags have IDs, the publisher objects are stored in a dictionary with their ID as the key
         self.pub_dict = {}
         self.middle_pubs = {}
+        
+        self.middles = []
 
         # rclpy.Context.on_shutdown(super().context, self.shutdown_callback)
 
@@ -135,18 +133,14 @@ class ArucoTrack(Node):
                      y_tot += corner[1]
 
                 middle = np.array([x_tot/4,y_tot/4])
-
+                self.middles.append(middle)
 
                 x = translation_vectors[i][0][0]
                 y = translation_vectors[i][0][1]
                 orientation = rotation_vectors[i][0][1]
 
                 # orientation = self.calculate_orientation(middle,corners[0],corners[1])
-
                 # centre = [id,int(x_tot/4),int(y_tot/4),orientation]
-
-
-                # cv2.circle(self.frame_markers,(centre[1],centre[2]),5,(255,0,0),2) # plots a circle in the middle of the marker 
                 # cv2.circle(self.frame_markers,(centre[1],centre[2]),5,(255,0,0),2) # plots a circle in the middle of the marker 
                 rotation_matrix = np.identity(3)
                 cv2.Rodrigues(rotation_vectors[i], rotation_matrix)
@@ -250,15 +244,6 @@ class ArucoTrack(Node):
         """
         As the Aruco gives an ID number, a dictionary containing all the publishing objects is created, with each robots publisher as the key
         """
-
-        # self.identified_markers += str(ID) + " "
-
-        # ID_msg = String()
-
-        # ID_msg.data = self.identified_markers
-
-        # self.ID_pub.publish(ID_msg)
-
         pub_name = f"/robot{ID}/pose"
         mid_name = f"/robot{ID}/middle"
         self.pub_dict[ID] = self.create_publisher(Pose, pub_name, 10)
@@ -276,6 +261,22 @@ class ArucoTrack(Node):
     def origin_callback(self, msg: Vector3):
         self.origin = msg
 
+    def calibrate_cam_pos(self):
+
+        """Function to map coordinates to a 2D floor plan of the room by performing a transform from image to perfect image view"""
+
+        perf_img_points = np.array([]) # where the markers would be if the caemra was positioned perfectly.
+        cam_points = np.array([]) # points where markers are detect
+
+        self.h, status = cv2.findHomography(perf_img_points,cam_points) # gives homographic transform matrix
+
+    def transform_pos(self):
+
+        self.middles_on_floor = []
+
+        for middle in self.middles :
+            self.middles_on_floor.append(cv2.perspectiveTransform(middle,self.h))  
+
 def main():
     rclpy.init()
 
@@ -285,6 +286,4 @@ def main():
     rclpy.shutdown()
 
 if __name__ == "__main__":
-    # img = cv2.imread("ros_turtle.jpg")
-    # cv2.imshow("image",img)
     main()
