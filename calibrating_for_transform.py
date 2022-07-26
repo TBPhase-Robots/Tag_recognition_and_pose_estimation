@@ -1,12 +1,23 @@
 # Python code for Multiple Color Detection
 
 
+""" this will detect where the post-it notes are so that they can be trasnformed into a new camera when they move"""
+
 import numpy as np
 import cv2
 
 
 # Capturing video through webcam
 webcam = cv2.VideoCapture(0)
+
+webcam.set(cv2.CAP_PROP_AUTOFOCUS, 0)
+webcam.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
+webcam.set(cv2.CAP_PROP_EXPOSURE, 50)
+#webcam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+#webcam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+webcam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+webcam.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
+webcam.set(cv2.CAP_PROP_FPS, 15)
 
 # Start a while loop
 while(1):
@@ -44,21 +55,28 @@ while(1):
 										cv2.RETR_TREE,
 										cv2.CHAIN_APPROX_SIMPLE)
 	
+	centres_list = []
 	for pic, contour in enumerate(contours):
 		area = cv2.contourArea(contour)
-		if(area > 300):
+		if(3500>area > 3000):
 			x, y, w, h = cv2.boundingRect(contour)
+			centres_list.append([x,y])
 			imageFrame = cv2.rectangle(imageFrame, (x, y),
 									(x + w, y + h),
 									(0, 0, 255), 2)
 			
 			cv2.putText(imageFrame, "Red Colour", (x, y),
 						cv2.FONT_HERSHEY_SIMPLEX, 1.0,
-						(0, 0, 255))	
-			
+						(0, 0, 255))
+
+	if (len(centres_list) == 6):
+		with open("calibrations.txt","w") as file:
+			file.write(str(centres_list))
+			print(centres_list)
+
 	# Program Termination
 	cv2.imshow("Multiple Color Detection in Real-TIme", imageFrame)
 	if cv2.waitKey(10) & 0xFF == ord('q'):
-		cap.release()
+		webcam.release()
 		cv2.destroyAllWindows()
 		break

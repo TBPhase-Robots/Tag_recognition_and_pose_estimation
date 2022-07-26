@@ -56,8 +56,8 @@ class ArucoTrack(Node):
 
         # imput camera values
         # used later to convert the position in the image to the functions
-        self.vert_res = 1920
-        self.horiz_res = 1080
+        self.vert_res = 3840 #1920
+        self.horiz_res = 2160 #1080
 
         self.cam_height = 1.55
         self.horiz_cam_aperture = 78 *2*np.pi/360
@@ -228,10 +228,11 @@ class ArucoTrack(Node):
             except KeyError : # if the key doesn't exist than a new publisher with that key is created.
                 print(f'No publisher for robot{pos[0]}')
 
-            middle = Vector3
+            middle = Pose()
 
-            middle.x = pos[4][0]
-            middle.y = pos[4][1]
+            middle.position.x = pos[4][0]
+            middle.position.y = pos[4][1]
+            middle.orientation.z = pos[3]
 
             try: 
                 self.middle_pubs[pos[0]].publish(middle)
@@ -247,7 +248,7 @@ class ArucoTrack(Node):
         pub_name = f"/robot{ID}/pose"
         mid_name = f"/robot{ID}/middle"
         self.pub_dict[ID] = self.create_publisher(Pose, pub_name, 10)
-        self.middle_pubs[ID] = self.create_publisher(Vector3,mid_name,10)
+        self.middle_pubs[ID] = self.create_publisher(Pose,mid_name,10)
         # self.pub_dict[ID] = rospy.Publisher(pub_name,Pose,queue_size=1) 
 
     def shutdown_callback(self):

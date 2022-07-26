@@ -45,17 +45,20 @@ class detect_colours():
             contours, hierarchy = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             output = cv2.drawContours(segmented_img, contours, -1, (0, 0, 255), 3)
 
-            detector = cv2.SimpleBlobDetector()
-
-            blobs = detector.detect(output)
-
-            #im_with_keypoints = cv2.drawKeypoints(self.img, blobs, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-
-            #cv2.imshow("Keypoints", im_with_keypoints)
+            for pic, contour in enumerate(contours):
+                area = cv2.contourArea(contour)
+                print(area)
+                if(area > 300):
+                    x, y, w, h = cv2.boundingRect(contour)
+                    self.img = cv2.rectangle(self.img, (x, y),
+                                            (x + w, y + h),
+                                            (0, 0, 255), 2)
+                    
+                    cv2.putText(self.img, "Red Colour", (x, y),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1.0,
+                                (0, 0, 255))	
 
             cv2.imshow("fnajn",output)
-
-            print(contours)
 
             if cv2.waitKey(1) and  0xFF == ord("q"):
                 break
