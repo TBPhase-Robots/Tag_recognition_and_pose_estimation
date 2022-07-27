@@ -4,6 +4,7 @@ their real world position. This position is then published to a ros topic as a g
 then make a new ros topics for each tag.
 """
 
+import sys
 import cv2
 from cv2 import cvtColor
 from cv2 import aruco
@@ -32,7 +33,7 @@ class ArucoTrack(Node):
 
     origin: Vector3 = Vector3()
 
-    def __init__(self):
+    def __init__(self, device):
 
         # initiate ros parts
         super().__init__(node_name="camera_tracker")
@@ -71,7 +72,7 @@ class ArucoTrack(Node):
         # self.vert_dist_ground = self.cam_height * np.tan(self.vert_cam_aperture)
 
         # set up camera for cv2
-        self.cam = cv2.VideoCapture(2)
+        self.cam = cv2.VideoCapture(device)
         self.cam.set(cv2.CAP_PROP_AUTOFOCUS, 0)
         self.cam.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
         self.cam.set(cv2.CAP_PROP_EXPOSURE, 150)
@@ -287,7 +288,11 @@ class ArucoTrack(Node):
 def main():
     rclpy.init()
 
-    aruco_tacker = ArucoTrack()
+    device = 0
+    if len(sys.argv) > 1:
+        device = int(sys.argv[1])
+
+    aruco_tacker = ArucoTrack(device)
     
     rclpy.spin(aruco_tacker)
     rclpy.shutdown()
