@@ -32,7 +32,7 @@ def main():
     fig = plt.figure()
     nx = 1
     ny = 1
-    for i in range(67, nx*ny+67):
+    for i in range(103, nx*ny+103):
         ax = fig.add_subplot(ny,nx, 1)
         img = aruco.drawMarker(aruco_dict,i, 700)
         plt.imshow(img, cmap = mpl.cm.gray, interpolation = "nearest")

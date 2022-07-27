@@ -25,6 +25,8 @@ from geometry_msgs.msg import Vector3
 from std_msgs.msg import Int32
 from std_msgs.msg import String
 
+special_markers = [100, 101, 102, 103]
+
 
 class ArucoTrack(Node):
 
@@ -56,23 +58,27 @@ class ArucoTrack(Node):
 
         # imput camera values
         # used later to convert the position in the image to the functions
-        self.vert_res = 3840 #1920
-        self.horiz_res = 2160 #1080
+        # self.vert_res = 3840 #1920
+        # self.horiz_res = 2160 #1080
+        # self.vert_res = 1920
+        # self.horiz_res = 1080
 
-        self.cam_height = 1.55
-        self.horiz_cam_aperture = 78 *2*np.pi/360
-        self.vert_cam_aperture = (self.vert_res/self.horiz_res) * self.horiz_cam_aperture # vert cam aperture 
+        # self.cam_height = 1.55
+        # self.horiz_cam_aperture = 78 *2*np.pi/360
+        # self.vert_cam_aperture = (self.vert_res/self.horiz_res) * self.horiz_cam_aperture # vert cam aperture 
 
-        self.horiz_dist_ground = self.cam_height * np.tan(self.horiz_cam_aperture)
-        self.vert_dist_ground = self.cam_height * np.tan(self.vert_cam_aperture)
+        # self.horiz_dist_ground = self.cam_height * np.tan(self.horiz_cam_aperture)
+        # self.vert_dist_ground = self.cam_height * np.tan(self.vert_cam_aperture)
 
         # set up camera for cv2
-        self.cam = cv2.VideoCapture(0)
+        self.cam = cv2.VideoCapture(2)
         self.cam.set(cv2.CAP_PROP_AUTOFOCUS, 0)
         self.cam.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
-        self.cam.set(cv2.CAP_PROP_EXPOSURE, 50)
-        self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-        self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        self.cam.set(cv2.CAP_PROP_EXPOSURE, 150)
+        # self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+        # self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+        self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
         self.cam.set(cv2.CAP_PROP_FPS, 60)
 
         # set up ArUco settings and parameters
